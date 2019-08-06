@@ -1,54 +1,104 @@
 import React from 'react';
 import Chart from './Chart';
-import { getData } from './utils';
+import { getData, getAllocation } from './utils';
 import styled from 'styled-components';
 
 // Components
 import SideBar from './components/SideBar';
 import TopBar from './components/TopBar';
+import Result from './components/Result';
+import Modal from './components/Modal';
+
+import { PacmanLoader } from 'react-spinners';
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      stocks: []
+      stocks: [],
+      optimizeOpen: false
     }
     this.handleDataSetting = this.handleDataSetting.bind(this);
-  }
-  componentDidMount() {
-    getData('Apple', 1999, 2010).then(data => {
-      this.setState({ stocks: [...this.state.stocks, data], data: data.Point })
-    })
-
+    this.handleStockDownloading = this.handleStockDownloading.bind(this);
+    this.handleOptimize = this.handleOptimize.bind(this);
+    this.optimize = this.optimize.bind(this);
   }
 
   handleDataSetting(pointList) {
-    this.setState({ data: pointList });
+    this.setState({ current: pointList });
+  }
+
+  async handleStockDownloading(stockName) {
+    const ret = await getData(stockName, 0, 9999);
+    let stock = Object.assign(ret[0], ret[1]);
+
+    this.setState((prevState) => { return { stocks: [...prevState.stocks, stock] } })
+  }
+
+  handleOptimize() {
+    this.setState((prevState) => { return { optimizeOpen: !prevState.optimizeOpen } })
+  }
+
+  async optimize(start, stop) {
+    const { stocks } = this.state;
+    if (start && stop) {
+      console.log(start, stop, stocks);
+      const allocation = await getAllocation(start, stop, stocks);
+      console.log(allocation);
+      this.handleOptimize();
+    }
   }
 
   render() {
-    const { stocks } = this.state;
-    if (this.state.data == null) {
-      return <div>Loading...</div>
-    }
+    const { stocks, current, optimizeOpen } = this.state;
     return (
-      <BarWrapper>
-        <Side>
-          <SideBar stocks={stocks} setData={this.handleDataSetting} />
-        </Side>
-        <Main>
-          <Top>
-            <TopBar />
-          </Top>
-          <Chart type={'hybrid'} data={this.state.data} />
-          <Results>
-            Results
-          </Results>
-        </Main>
-      </BarWrapper>
+      <React.Fragment>
+        <BarWrapper>
+          <Side>
+            <SideBar stocks={stocks} setData={this.handleDataSetting} optimize={this.handleOptimize} />
+          </Side>
+          <Main>
+            <Top>
+              <TopBar stocks={stocks} downloadStock={this.handleStockDownloading} />
+            </Top>
+            {current ?
+              <React.Fragment>
+                <Chart type={'hybrid'} data={current.Point} />
+                <Result current={current} />
+              </React.Fragment>
+              :
+              <Empty>
+                <Center>
+                  <PacmanLoader
+                    sizeUnit={"px"}
+                    size={30}
+                    color={'#85bb65'}
+                    loading={true}
+                  />
+                </Center>
+                Search for stocks to analyse or upload your own. <br /> Happy hacking!
+            </Empty>}
+          </Main>
+        </BarWrapper>
+        {optimizeOpen &&
+          <Modal close={this.handleOptimize} optimize={this.optimize} />
+        }
+      </React.Fragment>
+
     )
   }
 }
+
+const Center = styled.div`
+  width: 150px;
+  margin: 0 auto;
+  padding-bottom: 80px;
+`;
+
+const Empty = styled.div`
+padding-top: 150px;
+text-align: center;
+`;
 
 const BarWrapper = styled.div`
   display: flex;
@@ -71,14 +121,6 @@ const Main = styled.div`
 const Top = styled.div`
   width: 80vw;
   height: 65px;
-`
-
-const Results = styled.div`
-  height: 50px;
-  width: calc(80vw - 15px);
-  background-color: white;
-  border-radius: 15px;
-  box-shadow: 0 14px 28px rgba(0,0,0,0.25);
 `
 
 export default App;
