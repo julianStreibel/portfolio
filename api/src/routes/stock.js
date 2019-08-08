@@ -6,6 +6,7 @@ const csv = require('csv-parser');
 const Sequelize = require("sequelize");
 const math = require("mathjs");
 const Op = Sequelize.Op;
+var cov = require('compute-covariance');
 
 
 // models
@@ -80,9 +81,9 @@ router.get('/:name/:startYear/:stopYear/statistics', async (req, res) => {
         ev: math.mean(change),
         min: math.min(change),
         max: math.max(change),
-        oneYear: change.slice(change.length - 250, change.length).reduce(add),
-        fiveYears: change.slice(change.length - 1250, change.length).reduce(add),
-        tenYears: change.slice(change.length - 2500, change.length).reduce(add),
+        oneYear: change.slice(change.length - 250, change.length).reduce(mult, 1) - 1,
+        fiveYears: change.slice(change.length - 1250, change.length).reduce(mult, 1) - 1,
+        tenYears: change.slice(change.length - 2500, change.length).reduce(mult, 1) - 1,
 
     };
     res.json([stats, stock]);
@@ -120,6 +121,7 @@ router.post('/allocation', multer().none(), async (req, res) => {
     const startYear = req.body.start;
     const stopYear = req.body.stop;
     let stocks = req.body.stocks.split(",");
+    const strategy = req.body.strategy;
     stocks = await Promise.all(stocks.map(async s => {
         return await Stock.findOne({
             where: { name: s }, include: [{
@@ -132,21 +134,98 @@ router.post('/allocation', multer().none(), async (req, res) => {
             }]
         }).catch(errHandler);
     })).catch(errHandler);
+    stocks.map(s => { if (!s) res.json(null) })
 
+    // same time per point and same length
+    const startDate = stocks.map(s => s.Point).map(s => s[0].date).sort((a, b) => b - a)[0];
+    const stopDate = stocks.map(s => s.Point).map(s => s[s.length - 1].date).sort((a, b) => a - b)[0];
+    stocks = stocks.map(stock => stock.Point.filter(p => p.date >= startDate && p.date <= stopDate));
+    // absolute same length
+    const maxLength = stocks.map(stock => stock.length).sort((a, b) => a - b)[0];
+    stocks = stocks.map(stock => {
+        if (stock.length > maxLength) {
+            return stock.slice(0, maxLength);
+        }
+        return stock;
+    })
+    const totalReturns = stocks.map(s => s[s.length - 1].open / s[0].open - 1);
     // calculate change in all stocks
-    stocks = stocks.map(s => calculateChange(s.Point));
-    // make matrix
-    let X = math.matrix(stocks);
+    stocks = stocks.map(s => calculateChange(s));
+    let estimatetReturns = stocks.map(ret => math.mean(ret));
     // calculate cov matrix
-    const cov = math.variance(X);
-    console.log(cov)
-    //optimize weights
+    let t = stocks.map((outerStock) => {
+        return stocks.map((innerStock) => {
+            return cov(outerStock, innerStock)[0][1];
+        })
+    })
+    let covariance = t;
 
-    res.json(cov);
+    t = math.multiply(t, 2);
+
+    let helper = [];
+    let helper2 = [];
+    let weights = [];
+    if (strategy === 'Bulletproof (min Risk)') {
+        // framing with 1 and 0 in the corner
+        t = t.map(line => {
+            let copy = line;
+            copy.push(1);
+            helper.push(1);
+            helper2.push(0);
+            return copy;
+        })
+        helper.push(0);
+        helper2.push(1);
+        t.push(helper);
+        t = math.multiply(t, 10000000)
+        t = math.round(t)
+        t = math.multiply(t, 0.0000001)
+        weights = math.multiply(math.inv(t), helper2);
+        weights = weights.slice(0, weights.length - 1)
+
+    } else if (strategy === 'Efficient (opt Risk Return)') {
+        let helper3 = estimatetReturns;
+        t = t.map((line, i) => {
+            let copy = line;
+            copy.push(estimatetReturns[i])
+            copy.push(1);
+            helper.push(1);
+            helper2.push(0);
+            return copy;
+        })
+        helper.push(0);
+        helper.push(0);
+        helper3.push(0);
+        helper3.push(0);
+        helper2.push(Number(req.body.wantedReturn));  // <----------------- wantedReturn
+        helper2.push(1);
+        t.push(helper3)
+        t.push(helper);
+        t = math.multiply(t, 10000000)
+        t = math.round(t)
+        t = math.multiply(t, 0.0000001)
+        weights = math.multiply(math.inv(t), helper2);
+        weights = weights.slice(0, weights.length - 2)
+        estimatetReturns = estimatetReturns.slice(0, estimatetReturns.length - 2)
+    }
+
+
+
+    let allocation = {};
+    req.body.stocks.split(",").map((stock, i) => allocation[stock] = weights[i]);
+
+    // res.json([weights, estimatetReturns])
+
+    let ev = math.multiply(math.transpose(weights), estimatetReturns);
+    const totalReturn = math.multiply(math.transpose(weights), totalReturns);
+    let variance = math.multiply(math.transpose(weights), covariance);
+    variance = math.multiply(variance, weights);
+
+    res.json({ allocation: allocation, ev, std: math.sqrt(variance), start: startDate, stop: stopDate, totalReturn });
 })
 
-const add = (total, x) => {
-    return total + x;
+const mult = (total, x) => {
+    return total * (1 + x);
 }
 
 const calculateChange = (arr) => {

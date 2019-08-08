@@ -22,10 +22,12 @@ class App extends React.Component {
     this.handleStockDownloading = this.handleStockDownloading.bind(this);
     this.handleOptimize = this.handleOptimize.bind(this);
     this.optimize = this.optimize.bind(this);
+    this.reoptimize = this.reoptimize.bind(this);
+    this.deleteStock = this.deleteStock.bind(this);
   }
 
-  handleDataSetting(pointList) {
-    this.setState({ current: pointList });
+  handleDataSetting(stock) {
+    this.setState({ current: stock });
   }
 
   async handleStockDownloading(stockName) {
@@ -39,23 +41,49 @@ class App extends React.Component {
     this.setState((prevState) => { return { optimizeOpen: !prevState.optimizeOpen } })
   }
 
-  async optimize(start, stop) {
+  async optimize(start, stop, strategy, wantedReturn) {
     const { stocks } = this.state;
-    if (start && stop) {
-      console.log(start, stop, stocks);
-      const allocation = await getAllocation(start, stop, stocks);
-      console.log(allocation);
+    if (start && stop && strategy) {
+      this.setState({ start, stop, strategy, wantedReturn });
+      const allo = await getAllocation(start, stop, stocks, strategy, wantedReturn);
+      this.setState({ allo });
       this.handleOptimize();
     }
   }
 
+  async reoptimize() {
+    const { start, stop, strategy, wantedReturn, stocks } = this.state;
+    if (start) {
+      const allo = await getAllocation(start, stop, stocks, strategy, wantedReturn);
+      this.setState({ allo });
+    }
+  }
+
+  deleteStock(name) {
+    const { stocks, current } = this.state;
+    let curr = current && name === current.name ? false : current;
+    this.setState({ stocks: stocks.filter((s) => s.name !== name), current: curr })
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.current !== this.state.current) {
+      this.setState({ current: this.state.current });
+    }
+  }
+
   render() {
-    const { stocks, current, optimizeOpen } = this.state;
+    const { stocks, current, optimizeOpen, allo } = this.state;
     return (
       <React.Fragment>
         <BarWrapper>
           <Side>
-            <SideBar stocks={stocks} setData={this.handleDataSetting} optimize={this.handleOptimize} />
+            <SideBar
+              deleteStock={this.deleteStock}
+              allo={allo}
+              stocks={stocks}
+              setData={this.handleDataSetting}
+              optimize={this.handleOptimize}
+              reoptimize={this.reoptimize} />
           </Side>
           <Main>
             <Top>
@@ -81,7 +109,7 @@ class App extends React.Component {
           </Main>
         </BarWrapper>
         {optimizeOpen &&
-          <Modal close={this.handleOptimize} optimize={this.optimize} />
+          <Modal close={this.handleOptimize} stocks={stocks} optimize={this.optimize} />
         }
       </React.Fragment>
 

@@ -16,13 +16,15 @@ export function getData(stock, startYear, stopYear) {
     return promiseMSFT;
 }
 
-export function getAllocation(start, stop, stocks) {
+export function getAllocation(start, stop, stocks, strategy, wantedReturn) {
     let stockList = stocks.map(s => s.name)
     let form = new FormData();
+    form.append("strategy", strategy);
     form.append("start", start);
     form.append("stop", stop);
-    form.append("stocks", stockList)
-    return axios.post("http://localhost:8080/api/v1/stocks/allocation", form);
+    form.append("stocks", stockList);
+    form.append("wantedReturn", wantedReturn);
+    return axios.post("http://localhost:8080/api/v1/stocks/allocation", form).then(response => response.data);
 
 
 }

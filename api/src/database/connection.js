@@ -6,7 +6,7 @@ const sequelize = new Sequelize(
     config.username,
     config.password,
     {
-        host: 'db',
+        host: '',
         dialect: config.dialect,
         define: {
             //prevent sequelize from pluralizing table names

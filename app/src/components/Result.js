@@ -146,7 +146,7 @@ class Result extends React.Component {
                                 </Row>
                             </Crisis>
                             <Crisis>
-                                <HeadSmall>1997 1999: Asia</HeadSmall>
+                                <HeadSmall>1997 - 1999: Asia</HeadSmall>
                                 <Row>
                                     <Line>Return</Line>
                                     <Line>{asia ? Math.round(asia[0].ev * 100000) / 1000 : "-"}%</Line>
