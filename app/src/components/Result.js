@@ -68,15 +68,15 @@ class Result extends React.Component {
                         <br />
                         <Row>
                             <Line>1 Year</Line>
-                            <Line>{Math.round(oneYear * 100000) / 1000}%</Line>
+                            <Line>{oneYear ? Math.round(oneYear * 100000) / 1000 : "-"}%</Line>
                         </Row>
                         <Row>
                             <Line>5 Year</Line>
-                            <Line>{Math.round(fiveYears * 100000) / 1000}%</Line>
+                            <Line>{fiveYears ? Math.round(fiveYears * 100000) / 1000 : "-"}%</Line>
                         </Row>
                         <Row>
                             <Line>10 Year</Line>
-                            <Line>{Math.round(tenYears * 100000) / 1000}%</Line>
+                            <Line>{tenYears ? Math.round(tenYears * 100000) / 1000 : "-"}%</Line>
                         </Row>
 
                     </Stats>
@@ -213,7 +213,8 @@ const CrisisRisk = styled.div`
         `;
 
 const ResultWrapper = styled.div`
-          width: calc(80vw - 35px);
+          width: calc(80vw - 25px);
+          height: calc(100vh - 505px);
           background-color: white;
           border-radius: 15px;
           box-shadow: 0 14px 28px rgba(0,0,0,0.25);

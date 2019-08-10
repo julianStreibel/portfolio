@@ -53,7 +53,7 @@ class SideBar extends React.Component {
             console.log(series.filter(s => s < 0));
         return (
             <React.Fragment>
-                {series && series.filter(s => s < 0).length > 0 && "Waring: Nonsensical weigths!"}
+                {series && series.filter(s => s < 0).length > 0 && <Warning>Warning: Nonsensical weigths!</Warning>}
                 {options.labels && <ReactApexChart options={options} series={series} type="donut" />}
                 <Line>Return: {this.props.allocation.ev * 100}%</Line>
                 <Line>Risk: {this.props.allocation.std * 100}%</Line>
@@ -64,6 +64,11 @@ class SideBar extends React.Component {
 }
 
 const Line = styled.p`
+    margin: 0;
+`;
+
+const Warning = styled.p`
+    color: red;
     margin: 0;
 `;
 

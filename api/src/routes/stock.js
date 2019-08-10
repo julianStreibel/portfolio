@@ -69,22 +69,24 @@ router.get('/:name/:startYear/:stopYear/statistics', async (req, res) => {
             }
         }]
     }).catch(errHandler);
-    if (!stock) {
+    if (!stock || stock === null) {
         res.json(null);
     }
     // calculate change from open in stock
     let change = calculateChange(stock.Point);
 
-    // calculate standard deviation and expected value of change
+    const oneYear = stock.Point.length > 250 ? stock.Point[stock.Point.length - 1].open / stock.Point[stock.Point.length - 250].open - 1 : null;
+    const fiveYears = stock.Point.length > 1250 ? stock.Point[stock.Point.length - 1].open / stock.Point[stock.Point.length - 1250].open - 1 : null;
+    const tenYears = stock.Point.length > 2500 ? stock.Point[stock.Point.length - 1].open / stock.Point[stock.Point.length - 2500].open - 1 : null;
+
     const stats = {
         std: math.std(change),
         ev: math.mean(change),
         min: math.min(change),
         max: math.max(change),
-        oneYear: change.slice(change.length - 250, change.length).reduce(mult, 1) - 1,
-        fiveYears: change.slice(change.length - 1250, change.length).reduce(mult, 1) - 1,
-        tenYears: change.slice(change.length - 2500, change.length).reduce(mult, 1) - 1,
-
+        oneYear,
+        fiveYears,
+        tenYears,
     };
     res.json([stats, stock]);
 })
@@ -148,6 +150,7 @@ router.post('/allocation', multer().none(), async (req, res) => {
         }
         return stock;
     })
+    let saveStocksforLater = stocks;
     const totalReturns = stocks.map(s => s[s.length - 1].open / s[0].open - 1);
     // calculate change in all stocks
     stocks = stocks.map(s => calculateChange(s));
@@ -197,7 +200,7 @@ router.post('/allocation', multer().none(), async (req, res) => {
         helper.push(0);
         helper3.push(0);
         helper3.push(0);
-        helper2.push(Number(req.body.wantedReturn));  // <----------------- wantedReturn
+        helper2.push(Number(req.body.wantedReturn));
         helper2.push(1);
         t.push(helper3)
         t.push(helper);
@@ -213,21 +216,84 @@ router.post('/allocation', multer().none(), async (req, res) => {
 
     let allocation = {};
     req.body.stocks.split(",").map((stock, i) => allocation[stock] = weights[i]);
-
-    // res.json([weights, estimatetReturns])
-
     let ev = math.multiply(math.transpose(weights), estimatetReturns);
     const totalReturn = math.multiply(math.transpose(weights), totalReturns);
     let variance = math.multiply(math.transpose(weights), covariance);
     variance = math.multiply(variance, weights);
 
-    res.json({ allocation: allocation, ev, std: math.sqrt(variance), start: startDate, stop: stopDate, totalReturn });
+    const name = Math.random();
+    const points = calculatePortfolioPoints(allocation, saveStocksforLater);
+
+    // Portfolio as stock for statistic analysis
+    const portfolioAsStock = await Stock.create({ name }).catch(errHandler);
+    points.map(async p => await Point.create({ ...p, stockId: portfolioAsStock.id }).catch(errHandler))
+    const change = calculateChange(points);
+
+
+    const oneYear = points.length > 250 ? points[points.length - 1].open / points[points.length - 250].open - 1 : null;
+    const fiveYears = points.length > 1250 ? points[points.length - 1].open / points[points.length - 1250].open - 1 : null;
+    const tenYears = points.length > 2500 ? points[points.length - 1].open / points[points.length - 2500].open - 1 : null;
+
+    res.json({
+        name,
+        allocation: allocation,
+        ev,
+        std: math.sqrt(variance),
+        start: startDate,
+        stop: stopDate,
+        totalReturn,
+        Point: points,
+        min: math.min(change),
+        max: math.max(change),
+        oneYear,
+        fiveYears,
+        tenYears,
+    });
 })
+
+// allocation = {"Stock1": 0.5, "Stock2": 0.5}; 
+// stockPointList = [[Point, Point, ...],[Point, Point, ...]] in order of keys in allocation!
+// returns a Point list with the values of the weighted portfolio
+const calculatePortfolioPoints = (allocation, stockPointList) => {
+    const keys = Object.keys(allocation);
+    const weights = keys.map(k => allocation[k]);
+    const startValueListOfStocks = stockPointList.map(pl => pl[0].open); // for norming the portfolio start value to 1
+    const weightedPointList = stockPointList.map((stock, i) => {
+        const weight = weights[i];
+        return stock.map(p => {
+            return {
+                date: p.date,
+                open: p.open / startValueListOfStocks[i] * weight,
+                high: p.high / startValueListOfStocks[i] * weight,
+                low: p.low / startValueListOfStocks[i] * weight,
+                close: p.close / startValueListOfStocks[i] * weight,
+                adjClose: p.adjClose / startValueListOfStocks[i] * weight,
+                volume: p.volume / startValueListOfStocks[i] * weight,
+            }
+        })
+    })
+    return weightedPointList[0].map((point, i) => {
+        return {
+            date: point.date,
+            open: weightedPointList.map(s => s[i].open).reduce(add),
+            high: weightedPointList.map(s => s[i].high).reduce(add),
+            low: weightedPointList.map(s => s[i].low).reduce(add),
+            close: weightedPointList.map(s => s[i].close).reduce(add),
+            adjClose: weightedPointList.map(s => s[i].adjClose).reduce(add),
+            volume: weightedPointList.map(s => s[i].volume).reduce(add),
+        }
+    })
+
+
+}
 
 const mult = (total, x) => {
     return total * (1 + x);
 }
 
+const add = (total, x) => {
+    return total + x;
+}
 const calculateChange = (arr) => {
     return arr.map((point, i) => {
         if (i === 0) {

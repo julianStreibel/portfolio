@@ -1,7 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
 import Pie from './Pie';
-import { RiseLoader } from 'react-spinners';
 
 
 class SideBar extends React.Component {
@@ -25,11 +24,17 @@ class SideBar extends React.Component {
 
     render() {
         const { stocks, setData, current, optimize, deleteStock, reoptimize } = this.state;
-
+        const { allo } = this.props;
         return (
             <BarWrapper>
                 <Main>
-                    {this.props.allo && <Chart>
+                    {allo && <Chart
+                        current={"allocation" === current}
+                        onClick={() => {
+                            this.setState({ current: "allocation" });
+                            setData(allo);
+                        }}
+                    >
                         <Row>
                             <Head>Allocation</Head>
                             <HeadLogo
@@ -38,22 +43,26 @@ class SideBar extends React.Component {
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill-rule="evenodd"
                                 clip-rule="evenodd"
-                                onClick={() => reoptimize()}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    reoptimize();
+                                }}
                             >
                                 <path d="M7 9h-7v-7h1v5.2c1.853-4.237 6.083-7.2 11-7.2 6.623 0 12 5.377 12 12s-5.377 12-12 12c-6.286 0-11.45-4.844-11.959-11h1.004c.506 5.603 5.221 10 10.955 10 6.071 0 11-4.929 11-11s-4.929-11-11-11c-4.66 0-8.647 2.904-10.249 7h5.249v1z" />
                             </HeadLogo>
                         </Row>
-                        {this.props.allo && <Pie allocation={this.props.allo} />}
+                        {allo && <Pie allocation={allo} />}
                     </Chart>}
                     <h2>Stocks</h2>
                     {stocks.map((s, i) =>
                         <Stock key={s.name} current={current === s.name} onClick={() => {
-                            setData(s); this.setState({ current: s.name })
+                            setData(s);
+                            this.setState({ current: s.name })
                         }}>
                             <Name>{s.name}</Name>
                             <Logo onClick={(e) => {
-                                e.stopPropagation()
-                                deleteStock(s.name)
+                                e.stopPropagation();
+                                deleteStock(s.name);
                             }}>
                                 <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M12 0c6.623 0 12 5.377 12 12s-5.377 12-12 12-12-5.377-12-12 5.377-12 12-12zm0 1c6.071 0 11 4.929 11 11s-4.929 11-11 11-11-4.929-11-11 4.929-11 11-11zm0 10.293l5.293-5.293.707.707-5.293 5.293 5.293 5.293-.707.707-5.293-5.293-5.293 5.293-.707-.707 5.293-5.293-5.293-5.293.707-.707 5.293 5.293z" /></svg>
                             </Logo>
@@ -129,7 +138,7 @@ const Stock = styled.div`
 
 // Shadow card
 const BarWrapper = styled.div`
-              margin: 5px 10px 5px 5px;
+              margin: 5px 5px 5px 5px;
               border-radius: 15px;
               -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
               -moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
@@ -152,6 +161,8 @@ const Chart = styled.div`
           -ms-transition: all 0.25s ease-in-out;
           -o-transition: all 0.25s ease-in-out;
           transition: all 0.25s ease-in-out;
+
+    ${props => props.current && `background-color: lightgrey;`}
         
     :hover{
         -webkit-box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);

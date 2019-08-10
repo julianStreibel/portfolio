@@ -190,7 +190,6 @@ const Dropdown2 = styled.div`
 
 const Result = styled.div`
     z-index: 1000;
-    height: 50px;
     border-radius: 15px;
     padding: 0 0 0 10px;
     :hover {
@@ -202,9 +201,11 @@ const Dropdown = styled.div`
     z-index: 1000;
     display: flex;
     flex-direction: column;
+    max-height: calc(100vh - 70px);
     position: relative;
     top: 5px;
     width: 300px;
+    overflow: auto;
     background-color: white;
     border-width: 0;
     border-radius: 15px;
@@ -217,7 +218,7 @@ const BarWrapper = styled.div`
   flex-direction: row;
   justify-content: space-between;
   height: 65px;
-  margin: 5px 15px 0px 0px;
+  margin: 5px 5px 0px 0px;
 
 `;
 

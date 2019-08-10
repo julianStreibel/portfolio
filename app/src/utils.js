@@ -24,7 +24,19 @@ export function getAllocation(start, stop, stocks, strategy, wantedReturn) {
     form.append("stop", stop);
     form.append("stocks", stockList);
     form.append("wantedReturn", wantedReturn);
-    return axios.post("http://localhost:8080/api/v1/stocks/allocation", form).then(response => response.data);
+    return axios.post("http://localhost:8080/api/v1/stocks/allocation", form)
+        .then(response => response.data)
+        .then(data => {
+            return {
+                ...data,
+                Point: data.Point.map(p => {
+                    return {
+                        ...p,
+                        date: new Date(p.date)
+                    }
+                })
+            }
+        });
 
 
 }

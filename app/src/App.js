@@ -42,20 +42,28 @@ class App extends React.Component {
   }
 
   async optimize(start, stop, strategy, wantedReturn) {
-    const { stocks } = this.state;
+    const { stocks, current } = this.state;
     if (start && stop && strategy) {
       this.setState({ start, stop, strategy, wantedReturn });
       const allo = await getAllocation(start, stop, stocks, strategy, wantedReturn);
-      this.setState({ allo });
+      if (current && current.allocation) {
+        this.setState({ allo, current: allo });
+      } else {
+        this.setState({ allo });
+      }
       this.handleOptimize();
     }
   }
 
   async reoptimize() {
-    const { start, stop, strategy, wantedReturn, stocks } = this.state;
-    if (start) {
+    const { start, stop, strategy, wantedReturn, stocks, current } = this.state;
+    if (start && stocks.length > 1) {
       const allo = await getAllocation(start, stop, stocks, strategy, wantedReturn);
-      this.setState({ allo });
+      if (current.allocation) {
+        this.setState({ allo, current: allo });
+      } else {
+        this.setState({ allo });
+      }
     }
   }
 
@@ -65,14 +73,11 @@ class App extends React.Component {
     this.setState({ stocks: stocks.filter((s) => s.name !== name), current: curr })
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.current !== this.state.current) {
-      this.setState({ current: this.state.current });
-    }
-  }
+
 
   render() {
     const { stocks, current, optimizeOpen, allo } = this.state;
+    console.log(current)
     return (
       <React.Fragment>
         <BarWrapper>
@@ -104,7 +109,7 @@ class App extends React.Component {
                     loading={true}
                   />
                 </Center>
-                Search for stocks to analyse or upload your own. <br /> Happy hacking!
+                "Diversification is the only free lunch in investing." <br /> Harry Markowitz
             </Empty>}
           </Main>
         </BarWrapper>
