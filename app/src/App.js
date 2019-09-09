@@ -4,7 +4,7 @@ import Portfolio from './Portfolio';
 import Login from './Login';
 import Cookies from 'js-cookie';
 import axios from 'axios';
-const config = require('./config/config.json')["development"];
+const config = require('./config/config.json')["production"];
 
 class App extends React.Component {
     constructor(props) {
