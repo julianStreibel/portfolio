@@ -3,6 +3,9 @@ import styled from 'styled-components';
 import Dropzone from 'react-dropzone'
 import { Input as OGInput } from 'reactstrap';
 import axios from 'axios';
+import LogoutIcon from '../icons/logout.png';
+import { withRouter } from "react-router-dom";
+const config = require('../config/config.json')["development"];
 
 class TopBar extends React.Component {
     constructor(props) {
@@ -29,7 +32,7 @@ class TopBar extends React.Component {
                         onChange={(e) => this.handleQuery(e.target.value)}
                         value={query}
                         placeholder={'Search for stocks'} />
-                    {results.length > 0 && query &&
+                    {results && results.length > 0 && query &&
                         <Dropdown>
                             {results.map(r =>
                                 <Result onClick={() => {
@@ -42,9 +45,18 @@ class TopBar extends React.Component {
                         </Dropdown>
                     }
                 </div>
-                <NewStock onClick={() => this.setState((prevState) => { return { uploadStockOpen: !prevState.uploadStockOpen } })}>
-                    +
+                <Row>
+                    <NewStock onClick={() => this.setState((prevState) => { return { uploadStockOpen: !prevState.uploadStockOpen } })}>
+                        +
                     </NewStock>
+                    <NewStock onClick={() => {
+                        this.props.logout()
+                        this.props.history.push("/");
+                    }
+                    }>
+                        <img src={LogoutIcon} alt="Logo" height="20px" />
+                    </NewStock>
+                </Row>
                 {uploadStockOpen &&
                     <Dropdown2>
 
@@ -84,7 +96,7 @@ class TopBar extends React.Component {
             let form = new FormData();
             form.append("name", uploadStockName);
             form.append("csv", uploadStockCSV);
-            axios.post('http://localhost:8080/api/v1/stocks', form);
+            axios.post(`${config.API_URL}/stocks`, form, { withCredentials: true });
             this.setState({
                 uploadStockOpen: false,
                 uploadStockName: "",
@@ -107,7 +119,7 @@ class TopBar extends React.Component {
     async handleQuery(query) {
         let results = [];
         if (query) {
-            results = await fetch(`http://localhost:8080/api/v1/stocks/find/${query}`).then(res => res.json());
+            results = await fetch(`${config.API_URL}/stocks/find/${query}`, { credentials: 'include' }).then(res => res.json()).catch(e => console.log(e));
         }
         this.setState({
             query, results
@@ -172,13 +184,12 @@ const Input = styled(OGInput)`
 `;
 
 const Dropdown2 = styled.div`
-    text-align: center;
     z-index: 1000;
     display: flex;
     flex-direction: column;
     position:absolute;
     top: 60px; 
-    right: 15px;
+    right: 5px;
     width: 300px;
     height: 500px;
     background-color: white;
@@ -278,9 +289,14 @@ const NewStock = styled.div`
     line-height: 47px;
     height: 50px;
     width: 50px;
+    margin-left: 5px;
     background-color: white;
     border-radius: 15px;
 `
 
+const Row = styled.div`
+    display:flex;
+    flex-direction: row;
+`;
 
-export default TopBar;
+export default withRouter(TopBar);

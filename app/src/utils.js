@@ -1,7 +1,8 @@
 import axios from "axios";
+const config = require('./config/config.json')["development"];
 
 export function getData(stock, startYear, stopYear) {
-    const promiseMSFT = fetch(`http://localhost:8080/api/v1/stocks/${stock}/${startYear}/${stopYear}/statistics`)
+    const promiseMSFT = fetch(`${config.API_URL}/stocks/${stock}/${startYear}/${stopYear}/statistics`, { credentials: 'include' })
         .then(response => response.json())
         .then(stock => {
             if (!stock) { return null }
@@ -24,7 +25,7 @@ export function getAllocation(start, stop, stocks, strategy, wantedReturn) {
     form.append("stop", stop);
     form.append("stocks", stockList);
     form.append("wantedReturn", wantedReturn);
-    return axios.post("http://localhost:8080/api/v1/stocks/allocation", form)
+    return axios.post(`${config.API_URL}/stocks/allocation`, form, { withCredentials: true })
         .then(response => response.data)
         .then(data => {
             return {

@@ -22,18 +22,37 @@ router.use((req, res, next) => {
     next();
 });
 
+const requiresLogin = (req, res, next) => {
+    console.log("session", req.session)
+    if (req.session && req.session.userId) {
+        return next();
+    } else {
+        var err = new Error('You must be logged in to view this page.');
+        err.status = 401;
+        return next(err);
+    }
+}
+
 // list all stocks with the substring in query
-router.get('/find/:query', async (req, res) => {
-    const stocks = await Stock.findAll({ where: { name: { [Op.substring]: req.params.query } } }).catch(errHandler)
+router.get('/find/:query', requiresLogin, async (req, res) => {
+    const stocks = await Stock.findAll({
+        where: {
+            [Op.and]: [{ name: { [Op.substring]: req.params.query } }, { userId: req.session.userId }]
+
+        }
+    }).catch(errHandler)
     res.json(stocks);
 });
 
 // returns the stock with the name with all his points in the year-frame
-router.get('/:name/:startYear/:stopYear', async (req, res) => {
+router.get('/:name/:startYear/:stopYear', requiresLogin, async (req, res) => {
     const startYear = req.params.startYear ? req.params.startYear : 0;
     const stopYear = req.params.stopYear ? req.params.stopYear : 0;
     const stock = await Stock.findOne({
-        where: { name: req.params.name }, include: [{
+        where: {
+            [Op.and]: [{ name: req.params.name }, { userId: req.session.userId }]
+        },
+        include: [{
             model: Point, as: "Point", where: {
                 date: {
                     [Op.lt]: new Date(stopYear, 1),
@@ -46,9 +65,9 @@ router.get('/:name/:startYear/:stopYear', async (req, res) => {
 })
 
 // returns the stock with the name with all his points
-router.get('/:name', async (req, res) => {
+router.get('/:name', requiresLogin, async (req, res) => {
     const stock = await Stock.findOne({
-        where: { name: req.params.name }, include: [{
+        where: { [Op.and]: [{ name: req.params.name }, { userId: req.session.userId }] }, include: [{
             model: Point, as: "Point"
         }]
     }).catch(errHandler);
@@ -56,11 +75,11 @@ router.get('/:name', async (req, res) => {
 })
 
 // returns the stock with the name with all his points
-router.get('/:name/:startYear/:stopYear/statistics', async (req, res) => {
+router.get('/:name/:startYear/:stopYear/statistics', requiresLogin, async (req, res) => {
     const startYear = req.params.startYear ? req.params.startYear : 0;
     const stopYear = req.params.stopYear ? req.params.stopYear : 0;
     const stock = await Stock.findOne({
-        where: { name: req.params.name }, include: [{
+        where: { [Op.and]: [{ name: req.params.name }, { userId: req.session.userId }] }, include: [{
             model: Point, as: "Point", where: {
                 date: {
                     [Op.lt]: new Date(stopYear, 1),
@@ -92,16 +111,17 @@ router.get('/:name/:startYear/:stopYear/statistics', async (req, res) => {
 })
 
 // lists all stocks without points
-router.get('/', async (req, res) => {
-    const stocks = await Stock.findAll().catch(errHandler);
+router.get('/', requiresLogin, async (req, res) => {
+    const stocks = await Stock.findAll({ where: { userId: req.session.userId } }).catch(errHandler);
     res.json(stocks);
 });
 
 // creates new stock
-router.post('/', upload.single('csv'), async (req, res) => {
+router.post('/', requiresLogin, upload.single('csv'), async (req, res) => {     // TODO: add the userId from the sesstion
     if (req.body.name) {
         const stock = await Stock.create({
-            name: req.body.name
+            name: req.body.name,
+            userId: req.session.userId
         }).catch(errHandler);
         fs.createReadStream(req.file.path)
             .pipe(csv())
@@ -119,14 +139,14 @@ router.post('/', upload.single('csv'), async (req, res) => {
 });
 
 // creates and returns an optimal allocation
-router.post('/allocation', multer().none(), async (req, res) => {
+router.post('/allocation', requiresLogin, multer().none(), async (req, res) => {
     const startYear = req.body.start;
     const stopYear = req.body.stop;
     let stocks = req.body.stocks.split(",");
     const strategy = req.body.strategy;
     stocks = await Promise.all(stocks.map(async s => {
         return await Stock.findOne({
-            where: { name: s }, include: [{
+            where: { [Op.and]: [{ name: s }, { userId: req.session.userId }] }, include: [{
                 model: Point, as: "Point", where: {
                     date: {
                         [Op.lt]: new Date(stopYear, 1),
@@ -283,8 +303,6 @@ const calculatePortfolioPoints = (allocation, stockPointList) => {
             volume: weightedPointList.map(s => s[i].volume).reduce(add),
         }
     })
-
-
 }
 
 const mult = (total, x) => {
