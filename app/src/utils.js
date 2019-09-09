@@ -1,5 +1,5 @@
 import axios from "axios";
-const config = require('./config/config.json')["production"];
+const config = require('./config/config.json')["development"];
 
 export function getData(stock, startYear, stopYear) {
     const promiseMSFT = fetch(`${config.API_URL}/stocks/${stock}/${startYear}/${stopYear}/statistics`, { credentials: 'include' })

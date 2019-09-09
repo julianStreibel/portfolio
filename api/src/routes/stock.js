@@ -117,7 +117,7 @@ router.get('/', requiresLogin, async (req, res) => {
 });
 
 // creates new stock
-router.post('/', requiresLogin, upload.single('csv'), async (req, res) => {     // TODO: add the userId from the sesstion
+router.post('/', requiresLogin, upload.single('csv'), async (req, res) => {
     if (req.body.name) {
         const stock = await Stock.create({
             name: req.body.name,
