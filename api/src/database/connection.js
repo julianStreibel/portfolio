@@ -1,12 +1,12 @@
 const Sequelize = require("sequelize");
-const config = require('../../config/config.json')["development"];
+const config = require('../../config/config.json')["production"];
 
 const sequelize = new Sequelize(
     config.database,
     config.username,
     config.password,
     {
-        host: 'db',
+        host: config.host,
         dialect: config.dialect,
         define: {
             //prevent sequelize from pluralizing table names
