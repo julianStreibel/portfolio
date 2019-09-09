@@ -5,7 +5,6 @@ import { Input as OGInput } from 'reactstrap';
 import axios from 'axios';
 import LogoutIcon from '../icons/logout.png';
 import { withRouter } from "react-router-dom";
-const config = require('../config/config.json')["production"];
 const config = require('../config/config.json')["development"];
 
 class TopBar extends React.Component {

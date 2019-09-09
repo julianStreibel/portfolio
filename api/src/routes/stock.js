@@ -245,8 +245,8 @@ router.post('/allocation', requiresLogin, multer().none(), async (req, res) => {
     const points = calculatePortfolioPoints(allocation, saveStocksforLater);
 
     // Portfolio as stock for statistic analysis
-    const portfolioAsStock = await Stock.create({ name }).catch(errHandler);
-    points.map(async p => await Point.create({ ...p, stockId: portfolioAsStock.id }).catch(errHandler))
+    const portfolioAsStock = await Stock.create({ name, userId: req.session.userId }).catch(errHandler);
+    points.map(async p => await Point.create({ ...p, stockId: portfolioAsStock.id }).catch(errHandler));
     const change = calculateChange(points);
 
 
