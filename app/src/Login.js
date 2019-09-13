@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Input as OGInput } from 'reactstrap';
 import axios from 'axios';
 import { withRouter } from "react-router-dom";
-const config = require('./config/config.json')["production"];
+const config = require('./config/config.json')["development"];
 
 class Login extends React.Component {
     constructor(props) {
