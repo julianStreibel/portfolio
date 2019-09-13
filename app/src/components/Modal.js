@@ -142,6 +142,7 @@ const Button = styled.div`
     :hover {
         background-color: rgb(245,245,245)
     }
+    cursor: pointer;
 `
 
 const Input = styled(OGInput)`

@@ -128,6 +128,7 @@ const Stock = styled.div`
             flex-direction: row;
             justify-content: space-between;
             margin: 0 0 10px 5px;
+            cursor: pointer;
     ${props => props.current && `background-color: lightgrey;`}
 
                 :hover {
@@ -147,7 +148,6 @@ const BarWrapper = styled.div`
               box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
               background-color: white;
               padding: 10px;
-            
             `;
 
 const Chart = styled.div`
@@ -175,6 +175,7 @@ const Chart = styled.div`
     width: 90%;
     margin: 5px;
     padding: 10px;
+    cursor: pointer;
 `
 
 

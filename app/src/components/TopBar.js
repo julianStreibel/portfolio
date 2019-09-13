@@ -154,6 +154,7 @@ const DropzoneWrapper = styled.div`
   text-align: center;
   border-width: 0;
   border-radius: 15px;
+  cursor: pointer;
 `;
 
 const Input = styled(OGInput)`
@@ -292,6 +293,7 @@ const NewStock = styled.div`
     margin-left: 5px;
     background-color: white;
     border-radius: 15px;
+    cursor: pointer;
 `
 
 const Row = styled.div`
