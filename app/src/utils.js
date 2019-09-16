@@ -38,8 +38,14 @@ export function getAllocation(start, stop, stocks, strategy, wantedReturn) {
                 })
             }
         });
-
-
 }
 
+export function getPrediction(stockName, startTime, testTime, stopTime) {
+    let form = new FormData();
+    form.append("stockName", stockName);
+    form.append("startTime", startTime);
+    form.append("testTime", testTime);
+    form.append("stopTime", stopTime);
+    return axios.post(`${config.API_URL}/trading/predict`, form, { withCredentials: true });
+}
 

@@ -172,7 +172,7 @@ const Chart = styled.div`
           box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
             }
     border-radius: 15px;
-    width: 90%;
+    width: calc(90% - 5px);
     margin: 5px;
     padding: 10px;
     cursor: pointer;

@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { getData } from '../utils';
+import Trading from './Trading';
 
 class Result extends React.Component {
     constructor(props) {
@@ -43,13 +44,13 @@ class Result extends React.Component {
     }
 
     render() {
-        const { std, ev, min, max, oneYear, fiveYears, tenYears } = this.state.current;
+        const { std, ev, min, max, oneYear, fiveYears, tenYears, name } = this.state.current;
         const { banks, terror, com, asia, blackMonday, oil73, chosen } = this.state;
         return (
             <ResultWrapper>
                 <Row>
                     <Button chosen={chosen === 0} onClick={() => this.setState({ chosen: 0 })}>Risk</Button>
-                    <Button chosen={chosen === 1} onClick={() => this.setState({ chosen: 1 })}>Traiding</Button>
+                    <Button chosen={chosen === 1} onClick={() => this.setState({ chosen: 1 })}>Trading</Button>
                 </Row>
                 {chosen === 0 ?
                     <Row>
@@ -186,7 +187,7 @@ class Result extends React.Component {
                     </Row>
                     :
                     <Row>
-                        Traiding
+                        <Trading stockName={name} />
                     </Row>
                 }
             </ResultWrapper >
@@ -230,14 +231,14 @@ const CrisisRisk = styled.div`
 `;
 
 const ResultWrapper = styled.div`
-          width: calc(80vw - 25px);
-          height: calc(100vh - 505px);
-          background-color: white;
-          border-radius: 15px;
-          box-shadow: 0 14px 28px rgba(0,0,0,0.25);
-          padding: 10px 10px 20px 10px;    
-        
-        `;
+    width: calc(80vw - 25px);
+    height: calc(100vh - 505px);
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 14px 28px rgba(0,0,0,0.25);
+    padding: 10px 10px 20px 10px;    
+
+`;
 
 
 export default Result;

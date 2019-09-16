@@ -12,6 +12,7 @@ require('./src/database/bootstrap')();
 // import routes
 const stocks = require('./src/routes/stock');
 const accounts = require('./src/routes/account');
+const trading = require('./src/routes/trading');
 
 // Constants
 const PORT = 8080;
@@ -40,6 +41,7 @@ app.use('/uploads', express.static('uploads'));
 // Routes
 app.use('/api/v1/stocks', stocks);
 app.use('/api/v1/accounts', accounts);
+app.use('/api/v1/trading', trading);
 
 // test
 app.get('/api/v1/test', (req, res) => {

@@ -25,7 +25,6 @@ router.post('/register/', async (req, res) => {
         }
     }).catch(errHandler);
     if (shouldBeEmpty.length === 0) {
-        console.log("in")
         user.password = await bcrypt.hash(user.password, 10);
         const account = await Account.create({ name: user.name, mail: user.mail, password: user.password });
         req.session.userId = account.id;

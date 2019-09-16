@@ -305,10 +305,6 @@ const calculatePortfolioPoints = (allocation, stockPointList) => {
     })
 }
 
-const mult = (total, x) => {
-    return total * (1 + x);
-}
-
 const add = (total, x) => {
     return total + x;
 }
