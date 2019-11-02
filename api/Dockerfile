@@ -1,4 +1,4 @@
-FROM node
+FROM node:10.17.0
 
 WORKDIR /api
 
