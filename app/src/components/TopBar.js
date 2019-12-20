@@ -36,7 +36,7 @@ class TopBar extends React.Component {
                         <Dropdown>
                             {results.map(r =>
                                 <Result onClick={() => {
-                                    downloadStock(r.name);
+                                    downloadStock(r.name, false);
                                     this.setState({ query: "" })
                                 }}>
                                     <p>{r.name}</p>

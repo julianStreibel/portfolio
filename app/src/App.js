@@ -4,6 +4,7 @@ import Portfolio from './Portfolio';
 import Login from './Login';
 import Cookies from 'js-cookie';
 import axios from 'axios';
+import useUserState from './Hooks/useUserState';
 const config = require('./config/config.json')["development"];
 
 class App extends React.Component {
@@ -14,6 +15,9 @@ class App extends React.Component {
         }
         this.login = this.login.bind(this);
         this.logout = this.logout.bind(this);
+        const [getUserState, setUserState] = useUserState();
+        this.getUserState = getUserState;
+        this.setUserState = setUserState;
     }
 
     login(name) {
@@ -28,11 +32,14 @@ class App extends React.Component {
 
     render() {
         const { loggedIn, name } = this.state;
+        console.log(this.getUserState()['loggedIn'])
         return (
             <Router>
                 <Route path="/" exact component={() => <Login login={this.login} />} />
-                {loggedIn &&
+                {loggedIn ?
                     <Route path="/portfolio" exact component={() => <Portfolio name={name} logout={this.logout} />} />
+                    :
+                    <Route path="/portfolio" exact component={() => <Login login={this.login} />} />
                 }
             </Router>
         )

@@ -45,6 +45,7 @@ class Result extends React.Component {
 
     render() {
         const { std, ev, min, max, oneYear, fiveYears, tenYears, name } = this.state.current;
+        console.log('current', this.state.current)
         const { banks, terror, com, asia, blackMonday, oil73, chosen } = this.state;
         return (
             <ResultWrapper>

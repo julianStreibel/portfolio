@@ -93,6 +93,10 @@ router.get('/:name/:startYear/:stopYear/statistics', requiresLogin, async (req, 
     }
     // calculate change from open in stock
     let change = calculateChange(stock.Point);
+    console.log('std', math.std(change))
+    console.log('ev', math.mean(change))
+    console.log('min', math.min(change))
+    console.log('max', math.max(change))
 
     const oneYear = stock.Point.length > 250 ? stock.Point[stock.Point.length - 1].open / stock.Point[stock.Point.length - 250].open - 1 : null;
     const fiveYears = stock.Point.length > 1250 ? stock.Point[stock.Point.length - 1].open / stock.Point[stock.Point.length - 1250].open - 1 : null;
@@ -125,7 +129,7 @@ router.post('/', requiresLogin, upload.single('csv'), async (req, res) => {     
         }).catch(errHandler);
         fs.createReadStream(req.file.path)
             .pipe(csv())
-            .on('data', async (row) => await Point.create({
+            .on('data', async (row) => await Point.create(repairPoint({
                 stockId: stock.id,
                 date: row.Date,
                 open: Number(row.Open),
@@ -134,7 +138,7 @@ router.post('/', requiresLogin, upload.single('csv'), async (req, res) => {     
                 close: Number(row.Close),
                 adjClose: Number(row['Adj Close']),
                 volume: Number(row.Volume),
-            })).catch(errHandler);
+            }))).catch(errHandler);
     }
 });
 
@@ -246,7 +250,7 @@ router.post('/allocation', requiresLogin, multer().none(), async (req, res) => {
 
     // Portfolio as stock for statistic analysis
     const portfolioAsStock = await Stock.create({ name, userId: req.session.userId }).catch(errHandler);
-    points.map(async p => await Point.create({ ...p, stockId: portfolioAsStock.id }).catch(errHandler));
+    points.map(async p => await Point.create(repairPoint({ ...p, stockId: portfolioAsStock.id })).catch(errHandler));
     const change = calculateChange(points);
 
 
@@ -308,6 +312,7 @@ const calculatePortfolioPoints = (allocation, stockPointList) => {
 const add = (total, x) => {
     return total + x;
 }
+
 const calculateChange = (arr) => {
     return arr.map((point, i) => {
         if (i === 0) {
@@ -320,6 +325,20 @@ const calculateChange = (arr) => {
 
 const errHandler = (err) => {
     console.error("Error: ", err);
+}
+
+const repairPoint = (obj) => {
+    const keys = Object.keys(obj)
+    let newObj = {}
+    let x;
+    for (x in keys) {
+        if (!obj[keys[x]]) {
+            newObj[keys[x]] = 0
+        } else {
+            newObj[keys[x]] = obj[keys[x]]
+        }
+    }
+    return newObj
 }
 
 module.exports = router;

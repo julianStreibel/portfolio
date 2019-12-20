@@ -10,10 +10,14 @@ import Result from './components/Result';
 import Modal from './components/Modal';
 
 import { PacmanLoader } from 'react-spinners';
+import useUserState from './Hooks/useUserState';
 
 class Portfolio extends React.Component {
   constructor(props) {
     super(props);
+    const [getUserState, setUserState] = useUserState();
+    this.getUserState = getUserState;
+    this.setUserState = setUserState;
     this.state = {
       stocks: [],
       optimizeOpen: false
@@ -30,11 +34,13 @@ class Portfolio extends React.Component {
     this.setState({ current: stock });
   }
 
-  async handleStockDownloading(stockName) {
+  async handleStockDownloading(stockName, init) {
     const ret = await getData(stockName, 0, 9999);
     let stock = Object.assign(ret[0], ret[1]);
-
-    this.setState((prevState) => { return { stocks: [...prevState.stocks, stock] } })
+    const stocks = [...this.state.stocks, stock]
+    this.setState({ stocks })
+    if (!init)
+      this.setUserState('stocks', [...this.getUserState()['stocks'], stockName])
   }
 
   handleOptimize() {
@@ -59,7 +65,7 @@ class Portfolio extends React.Component {
     const { start, stop, strategy, wantedReturn, stocks, current } = this.state;
     if (start && stocks.length > 1) {
       const allo = await getAllocation(start, stop, stocks, strategy, wantedReturn);
-      if (current.allocation) {
+      if (current && current.allocation) {
         this.setState({ allo, current: allo });
       } else {
         this.setState({ allo });
@@ -71,13 +77,24 @@ class Portfolio extends React.Component {
     const { stocks, current } = this.state;
     let curr = current && name === current.name ? false : current;
     this.setState({ stocks: stocks.filter((s) => s.name !== name), current: curr })
+    const userStateStocks = this.getUserState()['stocks']
+    const index = userStateStocks.indexOf(name);
+    if (index > -1) {
+      console.log('userState', userStateStocks)
+      userStateStocks.splice(index, 1)
+      this.setUserState('stocks', userStateStocks)
+      console.log('userState after', userStateStocks.splice(index, 1))
+    }
   }
 
-
+  componentDidMount() {
+    const userState = this.getUserState()
+    userState['stocks'].map(name => this.handleStockDownloading(name, true))
+  }
 
   render() {
     const { stocks, current, optimizeOpen, allo } = this.state;
-    console.log(current)
+    console.log('stocks', stocks)
     return (
       <React.Fragment>
         <BarWrapper>
