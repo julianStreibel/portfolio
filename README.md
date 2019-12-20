@@ -21,7 +21,7 @@ First try min risk to get a feeling for setting the wanted return in the optimal
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+These instructions will get you a copy of the project up and running on your local machine for demo purposes.
 
 For an easy start use docker.
 
