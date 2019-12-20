@@ -31,4 +31,4 @@ docker-compose up --build
 
 ## Authors
 
-* **Julian Streibel** - *Api* - [julianstreibel](https://github.com/julianstreibl)
+* **Julian Streibel** [julianstreibel](https://github.com/julianstreibl)
