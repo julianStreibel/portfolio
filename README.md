@@ -15,7 +15,7 @@ If you look closely you notice that the current data (Coca Cola stock) shown in 
 First try min risk to get a feeling for setting the wanted return in the optimal risk return strategy.
 ![Choose optimization](./demo1.png)
 
-### 3. Look at your Portfoio
+### 3. Look at your Portfolio
 ![Look at the portfoio](./demo2.png)
 
 
